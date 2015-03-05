@@ -61,7 +61,7 @@ const dream = function() {
 const physical_reality = function() {
   const geometry = new THREE.PlaneGeometry(3, 2)
   const material = new THREE.MeshBasicMaterial({ color: colors.physical_reality })
-  const surface = new THREE.Mesh(geometry, material)
+  const surface = new THREE.Mesh(geometry, state.video.material)
   surface.position.z = dims.reality_z
   surface.position.y = 1
   return surface
@@ -72,7 +72,40 @@ const environment = function() {
   return group
 }
 
+const reality_video = function() {
+  const el = document.createElement('video')
+  el.src = 'import/sintel.ogv'
+  el.load()
+  el.play()
+
+  const img = document.createElement('canvas')
+  img.width = 480
+  img.height = 204
+
+  const ctx = img.getContext('2d')
+  ctx.fillStyle = '#000000'
+  ctx.fillRect(0, 0, img.width, img.height)
+
+  var tex = new THREE.Texture(img)
+  tex.minFilter = THREE.LinearFilter
+  tex.magFilter = THREE.LinearFilter
+
+  var mat = new THREE.MeshBasicMaterial({
+    map: tex,
+    overdraw: true,
+    side: THREE.DoubleSide
+  })
+
+  return {
+    source: el,
+    context: ctx,
+    texture: tex,
+    material: mat
+  }
+}
+
 state.environment = environment()
+state.video = reality_video()
 
 const scene = function() {
   const s = new THREE.Scene()
@@ -102,6 +135,11 @@ const render = function(t) {
   camera.position.x = dims.camera.x + noise.perlin3(t2, 0, 0) / 10
   camera.position.y = dims.camera.y + noise.perlin3(0, t2, 0) / 10
   camera.position.z = dims.camera.z + noise.perlin3(0, 0, t2) / 10
+
+  if (state.video.source.readyState == state.video.source.HAVE_ENOUGH_DATA) {
+    state.video.context.drawImage(state.video.source, 0, 0)
+    state.video.texture.needsUpdate = true
+  }
 
   renderer.render(s, camera)
 }
