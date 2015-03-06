@@ -208,13 +208,13 @@ const reality_video = function() {
   var ctx = can.context;
 
   const draw_lines = function() {
-    const n = 100;
-    const step = can.width / n;
+    const n = 120;
+    const step = (can.width + 140) / n;
     for (var i = 0; i < n; i++) {
       const x = i * step;
       ctx.beginPath();
       ctx.moveTo(x, -can.height);
-      ctx.lineTo(x, can.height);
+      ctx.lineTo(x, 2 * can.height);
       ctx.stroke();
     }
   };
