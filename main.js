@@ -107,10 +107,11 @@ const dream = function() {
 const meeting = function(w, label) {
 //  var group = new THREE.Object3D();
   const width = w * dims.road_width;
-  const height = 1;
+  const height = .4;
   const depth = 1;
+  const cwidth = 200;
   var b = box(width, height, depth, .5, true);
-  var l = canvas_texture(200, 100, 1);
+  var l = canvas_texture(cwidth, cwidth / width * height, 1);
   var ctx = l.context;
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, l.width, l.height);
@@ -127,19 +128,31 @@ const meeting = function(w, label) {
   return b;
 };
 
-const cue = function() {
+const cue = function(size, stick) {
   const dist = 1;
-  const w = .5;
-  const h = .5;
   const group = new THREE.Object3D();
-  const geom = new THREE.PlaneBufferGeometry(w, h);
+  //const geom = new THREE.PlaneBufferGeometry(w, h);
+  const geom = new THREE.CircleGeometry(size / 2, 16);
   const mat = new THREE.MeshBasicMaterial({
     color: colors.cue,
-    wireframe: true
+    //wireframe: true
   });
   const surf = new THREE.Mesh(geom, mat);
-  surf.position.y = 1;
+  surf.position.y = stick;
+  surf.rotation.y = Math.PI / 2;
   group.add(surf);
+  const linemat = new THREE.LineDashedMaterial({
+    color: 0xffffff,
+    linewidth: 1,
+    dashSize: .1,
+    gapSize: 10
+  });
+  var linegeom = new THREE.Geometry();
+  linegeom.vertices.push(new THREE.Vector3(0, stick, 0));
+  linegeom.vertices.push(new THREE.Vector3(0, 0, 0));
+  linegeom.lineDistancesNeedUpdate = true;//computeLineDistances();
+  var line = new THREE.Line(linegeom, linemat);
+  group.add(line);
   return group;
 };
 
@@ -279,9 +292,17 @@ const main = function() {
   state.video = reality_video();
   state.scene = scene();
 
+  // Test content
   var m = meeting(1, "9:00 MEETING");
-  do_position(m, -5, 0, 0, 0);
+  do_position(m, -1, 0, 0, 0);
   state.environment.add(m);
+
+  var d = dream();
+  do_position(d, -3, -dims.road_width * 1.5, 0, 0);
+  state.environment.add(d);
+
+  var c = cue(.75, 1.25);
+  d.add(c);
 
   noise.seed(0);
   render(0);
