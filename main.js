@@ -129,7 +129,7 @@ const meeting = function(w, label) {
   const geom = new THREE.PlaneBufferGeometry(width, height);
   const surf = new THREE.Mesh(geom, l.material);
   l.texture.needsUpdate = true;
-  surf.position.z = depth / 2;
+  surf.position.z = depth / 2 + .01;
   b.add(surf);
   return b;
 };
@@ -291,10 +291,14 @@ const render_reality = (function() {
   };
 })();
 
+var skip = false;
 const render = function(t) {
   requestAnimationFrame(render);
 
-  //state.distance += .01;
+  skip = !skip;
+  if (skip) return;
+
+  state.distance += .01;
   state.environment.position.z = state.distance;
 
   const t2 = t / 1000;
@@ -320,11 +324,11 @@ const main = function() {
 
   // Test content
   var m = meeting(1, "9:00 MEETING");
-  do_position(m, -1, 0, 0, 0);
+  do_position(m, 1, 0, 0, 0);
   state.environment.add(m);
 
   var d = dream();
-  do_position(d, -3, -dims.road_width * 1.5, 0, 0);
+  do_position(d, 2, -dims.road_width * 1.5, 0, 0);
   state.environment.add(d);
 
   var c = cue(.75, 1.25);
