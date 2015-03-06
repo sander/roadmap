@@ -38,17 +38,41 @@ const dims = {
   dream_y: 0,
   bg: wh(640, 480),
   dream: wh(3, 3),
-  reality_opacity: .75
+  reality_opacity: .85
 };
 
+var t = 0;
 const map = [
+  { t: t += 3, type: 'meeting', width: .5, lbl: '9:45 TRAINING', x: -.5 },
+  { t: t += 1.2, type: 'meeting', width: .3, lbl: '11:30 INTRO', x: .5 },
+  { t: t += 1.6, type: 'meeting', width: .6, lbl: '13:30 BRAINSTORM', x: -.25 },
   {
-    t: 1, type: 'meeting', width: .5, lbl: '9:00 MEETING', x: -.5
+    t: t += 3, type: 'dream', x: -3, cues: [
+      { size: 1, stick: 1.25, pos: [1, 1], pic: 'beach' }
+    ]
   },
   {
-    t: -3, type: 'dream', x: -3, cues: [
-      { size: 1, stick: 1.25, pos: [1, 1], pic: 'beach' },
-      { size: 1, stick: 0.75, pos: [-1, -1], pic: 'color1' }
+    t: t += 4, type: 'dream', x: 3.5, cues: [
+      { size: 1, stick: .75, pos: [-1, -1], pic: 'color1' },
+      { size: 1, stick: 1.25, pos: [1, 1.5], pic: 'drones' }
+    ]
+  },
+  { t: t += dims.dream.h + 1, type: 'meeting', width: 1, lbl: '6:00 COLLECT IDEAS', x: 0 },
+  { t: t += 2, type: 'meeting', width: .4, lbl: '9:00 WORK', x: .25 },
+  { t: t += 1.2, type: 'meeting', width: .3, lbl: '12:30 DAYDREAM', x: -.25 },
+  {
+    t: t += 0, type: 'dream', x: -5, cues: [
+      { size: 1, stick: .75, pos: [.5, -.5], pic: 'hotel' },
+      { size: 1.25, stick: 2, pos: [-1, 1], pic: 'vaccine' }
+    ]
+  },
+  { t: t += 5, type: 'meeting', width: .5, lbl: '15:00 BLOG', x: 0 },
+  { t: t += 2, type: 'meeting', width: .4, lbl: '18:00 DINE', x: .1},
+  {
+    t: t += 3, type: 'dream', x: 2.5, cues: [
+      { size: .75, stick: .75, pos: [.3, .4], pic: 'solar' },
+      { size: 1.5, stick: 1.5, pos: [0, 0], pic: 'color4' },
+      { size: 1, stick: 1, pos: [1.5, .35], pic: 'cards' }
     ]
   }
 ];
@@ -61,7 +85,8 @@ const slides = [
 
 var state = {
   distance: 0,
-  slide: 0
+  slide: 0,
+  speed: .01
 };
 
 // S T U F F
@@ -335,7 +360,11 @@ const render = function(t) {
   skip = !skip;
   if (skip) return;
 
-  state.distance += .01;
+  if (state.distance > map[map.length - 1].t + 12) {
+    state.distance = 0;
+  }
+
+  state.distance += state.speed;
   state.environment.position.z = state.distance;
 
   const t2 = t / 1000;
@@ -376,11 +405,11 @@ const main = function() {
   map.forEach(function(item) {
     if (item.type == 'meeting') {
       var m = meeting(item.width, item.lbl);
-      do_position(m, item.t, item.x, .25, 0);
+      do_position(m, item.t + .5, item.x, .25, 0);
       state.environment.add(m);
     } else if (item.type == 'dream') {
       var d = dream();
-      do_position(d, item.t, item.x, 0, 0);
+      do_position(d, item.t + dims.dream.h, item.x, 0, 0);
       state.environment.add(d);
       item.cues.forEach(function(item) {
 	var c = cue(item.size, item.stick, item.pic);
