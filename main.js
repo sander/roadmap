@@ -47,7 +47,8 @@ const map = [
   },
   {
     t: -3, type: 'dream', x: -3, cues: [
-      { size: 1, stick: 1.25, pos: [1, 1], pic: 'beach' }
+      { size: 1, stick: 1.25, pos: [1, 1], pic: 'beach' },
+      { size: 1, stick: 0.75, pos: [-1, -1], pic: 'color1' }
     ]
   }
 ];
@@ -170,7 +171,7 @@ const cue = function(size, stick, name) {
   var img = document.createElement('img');
   img.src = 'images/cue/' + name + '.jpg';
   img.addEventListener('load', function() {
-    can.context.drawImage(img, 0, 0, 397, 397, 0, 0, cansize, cansize);
+    can.context.drawImage(img, 0, 0, img.width, img.height, 0, 0, cansize, cansize);
     can.texture.needsUpdate = true;
   });
 
