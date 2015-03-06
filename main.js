@@ -105,15 +105,25 @@ const dream = function() {
 };
 
 const meeting = function(w, label) {
-  var b = box(w * dims.road_width, 1, 1, .5, true);
-  /*
-  var tg = THREE.TextGeometry(label, {
-    weight: 'bold'
-  });
-  var tmat = THREE.MeshBasicMaterial({ color: colors.main });
-  var tm = THREE.Mesh(tg, tmat);
-*/
-  //b.add(tm);
+//  var group = new THREE.Object3D();
+  const width = w * dims.road_width;
+  const height = 1;
+  const depth = 1;
+  var b = box(width, height, depth, .5, true);
+  var l = canvas_texture(200, 100, 1);
+  var ctx = l.context;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, l.width, l.height);
+  ctx.fillRect(-500, -500, 1000, 1000);
+  ctx.strokeStyle = '#fff';
+  ctx.fillStyle = '#000000';
+  ctx.font = '16px sans-serif';
+  ctx.fillText(label, 10, 26);
+  const geom = new THREE.PlaneBufferGeometry(width, height);
+  const surf = new THREE.Mesh(geom, l.material);
+  l.texture.needsUpdate = true;
+  surf.position.z = depth / 2;
+  b.add(surf);
   return b;
 };
 
@@ -122,7 +132,7 @@ const cue = function() {
   const w = .5;
   const h = .5;
   const group = new THREE.Object3D();
-  const geom = new THREE.PlaneGeometry(w, h);
+  const geom = new THREE.PlaneBufferGeometry(w, h);
   const mat = new THREE.MeshBasicMaterial({
     color: colors.cue,
     wireframe: true
@@ -134,7 +144,7 @@ const cue = function() {
 };
 
 const physical_reality = function() {
-  const geometry = new THREE.PlaneGeometry(20, 12);
+  const geometry = new THREE.PlaneBufferGeometry(20, 12);
   const surface = new THREE.Mesh(geometry, state.video.material);
   surface.position.z = dims.reality_z;
   surface.position.y = 1;
@@ -146,28 +156,53 @@ const environment = function() {
   return group;
 };
 
-const reality_video = function() {
+const canvas_texture = function(w, h, opacity) {
   const img = document.createElement('canvas');
-  img.width = dims.bg.w;
-  img.height = dims.bg.h;
+  img.width = w;
+  img.height = h;
 
-  const ctx = img.getContext('2d');
+  var ctx = img.getContext('2d');
+
+  var tex = new THREE.Texture(img);
+  tex.minFilter = THREE.LinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+
+  var mat = new THREE.MeshBasicMaterial({
+    map: tex,
+    overdraw: true,
+    side: THREE.DoubleSide,
+    transparent: true,
+    opacity: opacity
+  });
+
+  return {
+    material: mat,
+    texture: tex,
+    context: ctx,
+    width: w,
+    height: h
+  };
+};
+
+const reality_video = function() {
+  var can = canvas_texture(dims.bg.w, dims.bg.h, .95);
+  var ctx = can.context;
 
   const draw_lines = function() {
     const n = 100;
-    const step = img.width / n;
+    const step = can.width / n;
     for (var i = 0; i < n; i++) {
       const x = i * step;
       ctx.beginPath();
-      ctx.moveTo(x, -img.height);
-      ctx.lineTo(x, img.height);
+      ctx.moveTo(x, -can.height);
+      ctx.lineTo(x, can.height);
       ctx.stroke();
     }
   };
 
   const draw = function(t) {
     ctx.fillStyle = '#000000';
-    ctx.fillRect(0, 0, img.width, img.height);
+    ctx.fillRect(0, 0, can.width, can.height);
 
     const t2 = t / 1000;
     const a1 = noise.perlin2(t2, 0) / 10;
@@ -186,22 +221,10 @@ const reality_video = function() {
     ctx.restore();
   };
 
-  var tex = new THREE.Texture(img);
-  tex.minFilter = THREE.LinearFilter;
-  tex.magFilter = THREE.LinearFilter;
-
-  var mat = new THREE.MeshBasicMaterial({
-    map: tex,
-    overdraw: true,
-    side: THREE.DoubleSide,
-    transparent: true,
-    opacity: .95
-  });
-
   return {
     context: ctx,
-    texture: tex,
-    material: mat,
+    texture: can.texture,
+    material: can.material,
     draw: draw
   };
 };
@@ -256,7 +279,7 @@ const main = function() {
   state.video = reality_video();
   state.scene = scene();
 
-  var m = meeting(1, "tset");
+  var m = meeting(1, "9:00 MEETING");
   do_position(m, -5, 0, 0, 0);
   state.environment.add(m);
 
