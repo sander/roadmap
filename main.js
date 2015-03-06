@@ -22,7 +22,7 @@ const colors = {
   road: 0xffffff,
   dream: 0xffffff,
   physical_reality: 0xffffff,
-  physical_reality_line: 0x111111,
+  physical_reality_line: 0x333333,
   cue: 0xffffff,
   main: 0xffffff
 };
@@ -37,17 +37,23 @@ const dims = {
   road_y: -.05,
   dream_y: 0,
   bg: wh(640, 480),
-  dream: wh(3, 3)
+  dream: wh(3, 3),
+  reality_opacity: 1
 };
 
 const map = {
   dreams: []
 };
 
+const slides = [
+  'seneca'
+];
+
 // S T A T E
 
 var state = {
-  distance: 0
+  distance: 0,
+  slide: 0
 };
 
 // S T U F F
@@ -157,7 +163,7 @@ const cue = function(size, stick) {
 };
 
 const physical_reality = function() {
-  const geometry = new THREE.PlaneBufferGeometry(20, 12);
+  const geometry = new THREE.PlaneBufferGeometry(18, 13);
   const surface = new THREE.Mesh(geometry, state.video.material);
   surface.position.z = dims.reality_z;
   surface.position.y = 1;
@@ -198,7 +204,7 @@ const canvas_texture = function(w, h, opacity) {
 };
 
 const reality_video = function() {
-  var can = canvas_texture(dims.bg.w, dims.bg.h, .95);
+  var can = canvas_texture(dims.bg.w, dims.bg.h, dims.reality_opacity);
   var ctx = can.context;
 
   const draw_lines = function() {
@@ -263,8 +269,27 @@ const handle_key = function(e) {
     c.position.x = -dims.road_width * 2;
     c.position.z = -state.distance - dims.reality_z;
     state.environment.add(c);
+  } else if (!isNaN(parseInt(e.key))) {
+    state.slide = parseInt(e.key);
   }
-}
+};
+
+const render_reality = (function() {
+  var slide_content = slides.map(function(s) {
+    var img = document.createElement('img');
+    img.src = 'images/slide_' + s + '.jpg';
+    return img;
+  });
+  return function(t) {
+    if (state.slide == 0) {
+      state.video.draw(t);
+      state.video.texture.needsUpdate = true;
+    } else if (state.slide <= slides.length) {
+      state.video.context.drawImage(slide_content[state.slide - 1], 0, 0);
+      state.video.texture.needsUpdate = true;
+    }
+  };
+})();
 
 const render = function(t) {
   requestAnimationFrame(render);
@@ -278,9 +303,10 @@ const render = function(t) {
   camera.position.z = dims.camera.z + noise.perlin3(0, 0, t2) / 10;
 
   //if (state.video.source.readyState == state.video.source.HAVE_ENOUGH_DATA) {
-  state.video.draw(t);//context.drawImage(state.video.source, 0, 0)
-  state.video.texture.needsUpdate = true;
+  //state.video.draw(t);//context.drawImage(state.video.source, 0, 0)
+  //state.video.texture.needsUpdate = true;
   //}
+  render_reality(t);
 
   renderer.render(state.scene, camera);
 };
