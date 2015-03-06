@@ -134,15 +134,39 @@ const meeting = function(w, label) {
   return b;
 };
 
-const cue = function(size, stick) {
+const cue = function(size, stick, name) {
+  /*
+  img.onload = function() {
+    console.log('loaded');
+  };
+  */
   const dist = 1;
   const group = new THREE.Object3D();
   //const geom = new THREE.PlaneBufferGeometry(w, h);
   const geom = new THREE.CircleGeometry(size / 2, 16);
+  /*
   const mat = new THREE.MeshBasicMaterial({
     color: colors.cue,
     //wireframe: true
   });
+  */
+  /*
+  const mat = new THREE.MeshLambertMaterial({
+    map: THREE.ImageUtils.loadTexture('images/cue/' + name + '.jpg')
+  });
+  */
+
+  var cansize = 128;
+  var can = canvas_texture(cansize, cansize, 1);
+  var mat = can.material;
+
+  var img = document.createElement('img');
+  img.src = 'images/cue/' + name + '.jpg';
+  img.addEventListener('load', function() {
+    can.context.drawImage(img, 0, 0, 397, 397, 0, 0, cansize, cansize);
+    can.texture.needsUpdate = true;
+  });
+
   const surf = new THREE.Mesh(geom, mat);
   surf.position.y = stick;
   surf.rotation.y = Math.PI / 2;
@@ -154,7 +178,7 @@ const cue = function(size, stick) {
     gapSize: 10
   });
   var linegeom = new THREE.Geometry();
-  linegeom.vertices.push(new THREE.Vector3(0, stick, 0));
+  linegeom.vertices.push(new THREE.Vector3(0, stick - size / 2, 0));
   linegeom.vertices.push(new THREE.Vector3(0, 0, 0));
   linegeom.lineDistancesNeedUpdate = true;//computeLineDistances();
   var line = new THREE.Line(linegeom, linemat);
@@ -329,10 +353,10 @@ const main = function() {
   state.environment.add(m);
 
   var d = dream();
-  do_position(d, 2, -dims.road_width * 1.5, 0, 0);
+  do_position(d, -3, -dims.road_width * 1.5, 0, 0);
   state.environment.add(d);
 
-  var c = cue(.75, 1.25);
+  var c = cue(.75, 1.25, 'beach');
   d.add(c);
 
   noise.seed(0);
