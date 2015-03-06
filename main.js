@@ -38,7 +38,7 @@ const dims = {
   dream_y: 0,
   bg: wh(640, 480),
   dream: wh(3, 3),
-  reality_opacity: 1
+  reality_opacity: .9
 };
 
 const map = {
@@ -260,17 +260,18 @@ const scene = function() {
 // F U N C T I O N S
 
 const handle_key = function(e) {
-  if (e.key == 'd') {
+  const key = String.fromCharCode(e.which);
+  if (key == 'd') {
     var d = dream();
     d.position.z = dims.reality_z + dims.camera.z - dims.dream.h * .75 - state.distance;
     state.environment.add(d);
-  } else if (e.key == 'c') {
+  } else if (key == 'c') {
     var c = cue();
     c.position.x = -dims.road_width * 2;
     c.position.z = -state.distance - dims.reality_z;
     state.environment.add(c);
-  } else if (!isNaN(parseInt(e.key))) {
-    state.slide = parseInt(e.key);
+  } else if (!isNaN(parseInt(key))) {
+    state.slide = parseInt(key);
   }
 };
 
