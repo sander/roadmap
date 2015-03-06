@@ -38,15 +38,22 @@ const dims = {
   dream_y: 0,
   bg: wh(640, 480),
   dream: wh(3, 3),
-  reality_opacity: .9
+  reality_opacity: .75
 };
 
-const map = {
-  dreams: []
-};
+const map = [
+  {
+    t: 1, type: 'meeting', width: .5, lbl: '9:00 MEETING', x: -.5
+  },
+  {
+    t: -3, type: 'dream', x: -3, cues: [
+      { size: 1, stick: 1.25, pos: [1, 1], pic: 'beach' }
+    ]
+  }
+];
 
 const slides = [
-  'seneca'
+  '1', '2', '3', '4', '5'
 ];
 
 // S T A T E
@@ -286,14 +293,18 @@ const scene = function() {
 const handle_key = function(e) {
   const key = String.fromCharCode(e.which);
   if (key == 'd') {
+    /*
     var d = dream();
     d.position.z = dims.reality_z + dims.camera.z - dims.dream.h * .75 - state.distance;
     state.environment.add(d);
+    */
   } else if (key == 'c') {
+    /*
     var c = cue();
     c.position.x = -dims.road_width * 2;
     c.position.z = -state.distance - dims.reality_z;
     state.environment.add(c);
+    */
   } else if (!isNaN(parseInt(key))) {
     state.slide = parseInt(key);
   }
@@ -302,7 +313,7 @@ const handle_key = function(e) {
 const render_reality = (function() {
   var slide_content = slides.map(function(s) {
     var img = document.createElement('img');
-    img.src = 'images/slide_' + s + '.jpg';
+    img.src = 'images/slide' + s + '.jpg';
     return img;
   });
   return function(t) {
@@ -347,6 +358,7 @@ const main = function() {
   state.video = reality_video();
   state.scene = scene();
 
+  /*
   // Test content
   var m = meeting(1, "9:00 MEETING");
   do_position(m, 1, 0, 0, 0);
@@ -358,6 +370,25 @@ const main = function() {
 
   var c = cue(.75, 1.25, 'beach');
   d.add(c);
+  */
+
+  map.forEach(function(item) {
+    if (item.type == 'meeting') {
+      var m = meeting(item.width, item.lbl);
+      do_position(m, item.t, item.x, .25, 0);
+      state.environment.add(m);
+    } else if (item.type == 'dream') {
+      var d = dream();
+      do_position(d, item.t, item.x, 0, 0);
+      state.environment.add(d);
+      item.cues.forEach(function(item) {
+	var c = cue(item.size, item.stick, item.pic);
+	c.position.x = item.pos[0];
+	c.position.z = item.pos[1];
+	d.add(c);
+      });
+    }
+  });
 
   noise.seed(0);
   render(0);
