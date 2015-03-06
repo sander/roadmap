@@ -7,19 +7,24 @@ const wh = function(w, h) { return { w: w, h: h }; };
 const ratio2size = function(r, w, h) {
   return (w / h < r) ? wh(w, w / r) : wh(h * r, h);
 }
-const plane = function(w, h) {
-};
+const time2pos = function(time) { return time; };
+const do_position = function(obj, time, x, y, z0) {
+  obj.position.x = x;
+  obj.position.y = y;
+  obj.position.z = dims.reality_z + dims.camera.z + z0 - state.distance - time2pos(time);
+}
 
 // C O N F I G
 
 const colors = {
   background: 0x000000,
-  earth: 0x622659,
-  road: 0x9c4ea4,
-  dream: 0x782e91,
-  physical_reality: 0x583867,
+  earth: 0xffffff,
+  road: 0xffffff,
+  dream: 0xffffff,
+  physical_reality: 0xffffff,
   physical_reality_line: 0x111111,
   cue: 0xffffff,
+  main: 0xffffff
 };
 
 const dims = {
@@ -31,7 +36,12 @@ const dims = {
   earth_y: -.1,
   road_y: -.05,
   dream_y: 0,
-  bg: wh(640, 480)
+  bg: wh(640, 480),
+  dream: wh(3, 3)
+};
+
+const map = {
+  dreams: []
 };
 
 // S T A T E
@@ -53,6 +63,30 @@ document.body.appendChild(renderer.domElement);
 
 // C O M P O N E N T S
 
+const box = function(w, h, d, line, solid) {
+  solid = !!solid;
+  var group = new THREE.Object3D();
+  var geometry = new THREE.BoxGeometry(w, h, d);
+  var material = new THREE.MeshBasicMaterial({
+    color: colors.main,
+//    wireframe: true,
+//    wireframeLinewidth: line
+  });
+  var surface = new THREE.Mesh(geometry, material);
+  if (solid) {
+    group.add(surface);
+  } else {
+    var helper = new THREE.EdgesHelper(surface, colors.road);
+    helper.material.linewidth = line;
+    group.add(helper);
+  }
+  return group;
+};
+
+const plane = function(w, d, line) {
+  return box(w, 0, d, line);
+};
+
 const earth = function() {
   const geometry = new THREE.PlaneGeometry(dims.horizon, dims.horizon);
   const material = new THREE.MeshBasicMaterial({ color: colors.earth });
@@ -63,30 +97,24 @@ const earth = function() {
 };
 
 const road = function() {
-  const geometry = new THREE.BoxGeometry(dims.road_width, 0, dims.horizon);
-  const material = new THREE.MeshBasicMaterial({
-    color: colors.road,
-    wireframe: true,
-    wireframeLinewidth: 2
-  });
-  const surface = new THREE.Mesh(geometry, material);
-  const helper = new THREE.EdgesHelper(surface, colors.road);
-  helper.material.linewidth = 2;
-  return helper;
+  return plane(dims.road_width, dims.horizon, 2);
 };
 
 const dream = function() {
-  const geometry = new THREE.PlaneGeometry(3, 3);
-  const material = new THREE.MeshBasicMaterial({
-    color: colors.dream,
-    wireframe: true
+  return plane(dims.dream.w, dims.dream.h, 4);
+};
+
+const meeting = function(w, label) {
+  var b = box(w * dims.road_width, 1, 1, .5, true);
+  /*
+  var tg = THREE.TextGeometry(label, {
+    weight: 'bold'
   });
-  const surface = new THREE.Mesh(geometry, material);
-  surface.rotation.x = -Math.PI / 2;
-  surface.position.x = -dims.road_width * 2;
-  surface.position.y = .5;
-  surface.position.z = 4;
-  return surface;
+  var tmat = THREE.MeshBasicMaterial({ color: colors.main });
+  var tm = THREE.Mesh(tg, tmat);
+*/
+  //b.add(tm);
+  return b;
 };
 
 const cue = function() {
@@ -167,7 +195,7 @@ const reality_video = function() {
     overdraw: true,
     side: THREE.DoubleSide,
     transparent: true,
-    opacity: .9
+    opacity: .95
   });
 
   return {
@@ -192,7 +220,7 @@ const scene = function() {
 const handle_key = function(e) {
   if (e.key == 'd') {
     var d = dream();
-    d.position.z = - state.distance - 10;
+    d.position.z = dims.reality_z + dims.camera.z - dims.dream.h * .75 - state.distance;
     state.environment.add(d);
   } else if (e.key == 'c') {
     var c = cue();
@@ -205,7 +233,7 @@ const handle_key = function(e) {
 const render = function(t) {
   requestAnimationFrame(render);
 
-  state.distance += .01;
+  //state.distance += .01;
   state.environment.position.z = state.distance;
 
   const t2 = t / 1000;
@@ -227,6 +255,10 @@ const main = function() {
   state.environment = environment();
   state.video = reality_video();
   state.scene = scene();
+
+  var m = meeting(1, "tset");
+  do_position(m, -5, 0, 0, 0);
+  state.environment.add(m);
 
   noise.seed(0);
   render(0);
