@@ -149,8 +149,8 @@ const meeting = function(w, label) {
   const height = .4;
   const depth = 1;
   const cwidth = 200;
-  var b = box(width, height, depth, .5, true);
-  var l = canvas_texture(cwidth, cwidth / width * height, 1);
+  var b = box(width, height, depth, .5, false);
+  var l = canvas_texture(cwidth, cwidth / width * height, .75);
   var ctx = l.context;
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, l.width, l.height);
